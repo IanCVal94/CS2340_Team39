@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{{ restaurant.name }}</h2>
+<p><strong>Cuisine Type:</strong> {{ restaurant.cuisine_type }}</p>
+<p><strong>Location:</strong> {{ restaurant.location }}</p>
+<p><strong>Rating:</strong> {{ restaurant.rating }}</p>
+
+<h3>Reviews</h3>
+<ul>
+    {% for review in reviews %}
+        <li>{{ review.user.username }}: {{ review.rating }} stars - {{ review.review_text }}</li>
+    {% endfor %}
+</ul>
+
+<a href="{% url 'favorite-restaurant' restaurant.id %}">
+    {% if user.is_authenticated %}
+        {% if restaurant in user.profile.favorites.all %}
+            Remove from favorites
+        {% else %}
+            Add to favorites
+        {% endif %}
+    {% else %}
+        <li><a href="{% url 'login' %}">Login</a> To Favorite Restaurants</li>
+        <li>Or <a href="{% url 'signup' %}">Sign Up</a> To Favorite Restaurants</li>
+    {% endif %}
+</a>
+
+<!-- Display Google Map for the restaurant location -->
+<div id="map"></div>
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+<script>
+    function initMap() {
+        var location = {lat: {{ restaurant.latitude }}, lng: {{ restaurant.longitude }}};
+        var map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 15,
+            center: location
+        });
+        var marker = new google.maps.Marker({
+            position: location,
+            map: map
+        });
+    }
+    window.onload = initMap;
+</script>
+
+{% endblock %}

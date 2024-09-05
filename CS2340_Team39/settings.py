@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'ATLFoodFinder.apps.AtlfoodfinderConfig',
+    'accounts',  # Add this if accounts is a new app
+    'restaurants',  # Add this if restaurants is a new app
 ]
 
 MIDDLEWARE = [
