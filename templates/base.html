@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Restaurant Search{% endblock %}</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
 </head>
 <body>
   <header>
@@ -27,9 +29,9 @@
     {% block content %}
     {% endblock %}
   </main>
-  
-  <footer>
+
+</body>
+<footer>
     <p>&copy; 2024 Restaurant Search App</p>
   </footer>
-</body>
 </html>

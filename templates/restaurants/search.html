@@ -1,5 +1,81 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<div id="map"></div>
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+  <h2>Search Restaurants</h2>
+
+  <form method="GET" action="{% url 'search' %}">
+    <!-- Existing form fields -->
+    <input type="text" name="q" placeholder="Search by name..." value="{{ request.GET.q }}">
+    <input type="text" name="cuisine" placeholder="Search by cuisine..." value="{{ request.GET.cuisine }}">
+    <input type="text" id="location-search" name="location" placeholder="Search by address..." value="{{ request.GET.location }}">
+    
+    <label for="distance">Distance (km):</label>
+    <input type="number" name="distance" min="1" max="100" value="{{ request.GET.distance|default:10 }}">  
+    
+    <label for="rating">Minimum Rating:</label>
+    <select name="rating">
+        <option value="">Any</option>
+        <option value="1">1+</option>
+        <option value="2">2+</option>
+        <option value="3">3+</option>
+        <option value="4">4+</option>
+        <option value="5">5+</option>
+    </select>
+    
+    <button type="submit">Search</button>
+  </form>
+
+  <h3>Search Results:</h3>
+  <ul>
+    {% for restaurant in restaurants %}
+      <li><a href="{% url 'detail' restaurant.id %}">{{ restaurant.name }}</a> ({{ restaurant.location }})</li>
+    {% empty %}
+      <li>No restaurants found matching your search criteria.</li>
+    {% endfor %}
+  </ul>
+
+  <!-- Google Map Container -->
+  <div id="map" style="height: 500px; width: 100%;"></div>
+
+  <script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_API_KEY }}"></script>
+  <script>
+    function initMap() {
+      var userLat = {{ user_lat|default:33.7488 }};
+      var userLng = {{ user_lng|default:-84.3877 }};
+      
+      var map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 12,
+        center: {lat: userLat, lng: userLng}
+      });
+
+      var locations = [
+        {% for restaurant in restaurants %}
+          {
+            lat: {{ restaurant.latitude }},
+            lng: {{ restaurant.longitude }},
+            name: "{{ restaurant.name }}",
+            id: "{{ restaurant.id }}"
+          },
+        {% endfor %}
+      ];
+
+      locations.forEach(function(location) {
+        var marker = new google.maps.Marker({
+          position: {lat: location.lat, lng: location.lng},
+          map: map,
+          title: location.name
+        });
+
+        var infowindow = new google.maps.InfoWindow({
+          content: '<a href="/restaurants/detail/' + location.id + '">' + location.name + '</a>'
+        });
+
+        marker.addListener('click', function() {
+          infowindow.open(map, marker);
+        });
+      });
+    }
+
+    window.onload = initMap;
+  </script>
 {% endblock %}
