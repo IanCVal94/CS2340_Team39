@@ -79,12 +79,18 @@ def restaurant_detail_view(request, place_id):
     # Render your template using the restaurant data
     return render(request, 'restaurants/detail.html', {'restaurant_data': restaurant_data})
 
+
 @login_required
-def favorite_restaurant(request, place_id):
-    restaurant = get_object_or_404(Restaurant, id=place_id)
+def favorite_restaurant(request):
+    place_id = request.GET.get('place_id')  # Get place_id from query parameters
+    if not place_id:
+        return redirect('search')  # Redirect if no place_id provided
+
+    restaurant = get_object_or_404(Restaurant, place_id=place_id)
     profile = request.user.profile
     if restaurant in profile.favorites.all():
         profile.favorites.remove(restaurant)
     else:
         profile.favorites.add(restaurant)
-    return redirect('detail', restaurant_id=place_id)
+
+    return redirect('detail', place_id=place_id)

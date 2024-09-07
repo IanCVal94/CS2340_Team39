@@ -6,34 +6,32 @@
 <p><strong>Phone Number:</strong> {{ restaurant_data.formatted_phone_number }}</p>
 <p><strong>Rating:</strong> {{ restaurant_data.rating }}</p>
 
-<!-- Display reviews if any exist -->
-<h3>Reviews</h3>
-<ul>
-    {% if reviews %}
-        {% for review in reviews %}
-            <li>{{ review.user.username }}: {{ review.rating }} stars - {{ review.review_text }}</li>
-        {% endfor %}
-    {% else %}
-        <p>No reviews yet. Be the first to write one!</p>
-    {% endif %}
-</ul>
+<!-- Display Google Reviews -->
+<h3>Google Reviews</h3>
+<div id="reviews-container">
+    <p>Loading reviews...</p>
+</div>
 
-<!-- Favorite button functionality -->
 {% if user.is_authenticated %}
-    <a href="{% url 'favorite' restaurant_data.id %}">
-        {% if restaurant_data in user.profile.favorites.all %}
-            Remove from favorites
-        {% else %}
-            Add to favorites
-        {% endif %}
-    </a>
+    <form action="{% url 'favorite' %}" method="get">
+        {% csrf_token %}
+        <input type="hidden" name="place_id" value="{{ restaurant_data.place_id }}">
+        <button type="submit">
+            {% if restaurant_data.place_id in user.profile.favorites.all %}
+                Remove from Favorites
+            {% else %}
+                Add to Favorites
+            {% endif %}
+        </button>
+    </form>
 {% else %}
-    <p><a href="{% url 'login' %}">Login</a> or <a href="{% url 'signup' %}">Sign up</a> to add this restaurant to your favorites.</p>
+    <p><a href="{% url 'login' %}">Login</a> To Favorite Restaurants</p>
+    <p>Or <a href="{% url 'signup' %}">Sign Up</a> To Favorite Restaurants</p>
 {% endif %}
 
 <!-- Display Google Map for the restaurant location -->
 <div id="map" style="height: 400px; width: 100%;"></div>
-<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_API_KEY }}&callback=initMap" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_API_KEY }}"></script>
 <script>
     function initMap() {
         var location = { lat: {{ restaurant_data.latitude }}, lng: {{ restaurant_data.longitude }} };
@@ -45,19 +43,38 @@
             position: location,
             map: map
         });
+
+        // Fetch Google Reviews
+        fetchGoogleReviews('{{ restaurant_data.place_id }}');
+    }
+
+    function fetchGoogleReviews(placeId) {
+        var request = {
+            placeId: placeId,
+            fields: ['review']
+        };
+        var service = new google.maps.places.PlacesService(document.createElement('div'));
+        service.getDetails(request, function(place, status) {
+            if (status === google.maps.places.PlacesServiceStatus.OK) {
+                var reviewsContainer = document.getElementById('reviews-container');
+                reviewsContainer.innerHTML = ''; // Clear loading text
+                if (place.reviews && place.reviews.length > 0) {
+                    place.reviews.forEach(function(review) {
+                        var reviewElement = document.createElement('div');
+                        reviewElement.innerHTML = `
+                            <strong>${review.author_name}</strong> (${review.rating} stars)
+                            <p>${review.text}</p>
+                        `;
+                        reviewsContainer.appendChild(reviewElement);
+                    });
+                } else {
+                    reviewsContainer.innerHTML = '<p>No reviews available.</p>';
+                }
+            } else {
+                console.error('Error fetching reviews:', status);
+                document.getElementById('reviews-container').innerHTML = '<p>Failed to load reviews.</p>';
+            }
+        });
     }
 </script>
-
-<!-- Review form for authenticated users -->
-<h3>Write a Review</h3>
-{% if user.is_authenticated %}
-    <form method="POST">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Submit Review</button>
-    </form>
-{% else %}
-    <p><a href="{% url 'login' %}">Login</a> or <a href="{% url 'signup' %}">Sign up</a> to write a review.</p>
-{% endif %}
 {% endblock %}
-

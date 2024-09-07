@@ -1,11 +1,16 @@
 {% extends 'base.html' %}
 {% block content %}
 <h2>{{ user.username }}'s Profile</h2>
-    <p>Profile Info Here: </p>
 <h3>Your Favorite Restaurants</h3>
 <ul>
-    {% for restaurant in favorites %}
-        <li><a href="{% url 'restaurant-detail' restaurant.id %}">{{ restaurant.name }}</a></li>
+    {% for restaurant in favorite_restaurants %}
+        <li>
+            <a href="{% url 'detail' restaurant.place_id %}">
+                {{ restaurant.name }}
+            </a>
+        </li>
+    {% empty %}
+        <p>You have no favorite restaurants.</p>
     {% endfor %}
 </ul>
     <p><a href="{% url 'logout' %}">Logout</a></p>
