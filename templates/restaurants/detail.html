@@ -1,36 +1,42 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>{{ restaurant.name }}</h2>
-<p><strong>Cuisine Type:</strong> {{ restaurant.cuisine_type }}</p>
-<p><strong>Location:</strong> {{ restaurant.location }}</p>
-<p><strong>Rating:</strong> {{ restaurant.rating }}</p>
+<h2>{{ restaurant_data.name }}</h2>
+<p><strong>Cuisine Type:</strong> {{ restaurant_data.cuisine_type }}</p>
+<p><strong>Location:</strong> {{ restaurant_data.formatted_address }}</p>
+<p><strong>Phone Number:</strong> {{ restaurant_data.formatted_phone_number }}</p>
+<p><strong>Rating:</strong> {{ restaurant_data.rating }}</p>
 
+<!-- Display reviews if any exist -->
 <h3>Reviews</h3>
 <ul>
-    {% for review in reviews %}
-        <li>{{ review.user.username }}: {{ review.rating }} stars - {{ review.review_text }}</li>
-    {% endfor %}
+    {% if reviews %}
+        {% for review in reviews %}
+            <li>{{ review.user.username }}: {{ review.rating }} stars - {{ review.review_text }}</li>
+        {% endfor %}
+    {% else %}
+        <p>No reviews yet. Be the first to write one!</p>
+    {% endif %}
 </ul>
 
-<a href="{% url 'favorite-restaurant' restaurant.id %}">
-    {% if user.is_authenticated %}
-        {% if restaurant in user.profile.favorites.all %}
+<!-- Favorite button functionality -->
+{% if user.is_authenticated %}
+    <a href="{% url 'favorite' restaurant_data.id %}">
+        {% if restaurant_data in user.profile.favorites.all %}
             Remove from favorites
         {% else %}
             Add to favorites
         {% endif %}
-    {% else %}
-        <li><a href="{% url 'login' %}">Login</a> To Favorite Restaurants</li>
-        <li>Or <a href="{% url 'signup' %}">Sign Up</a> To Favorite Restaurants</li>
-    {% endif %}
-</a>
+    </a>
+{% else %}
+    <p><a href="{% url 'login' %}">Login</a> or <a href="{% url 'signup' %}">Sign up</a> to add this restaurant to your favorites.</p>
+{% endif %}
 
 <!-- Display Google Map for the restaurant location -->
-<div id="map"></div>
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+<div id="map" style="height: 400px; width: 100%;"></div>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_API_KEY }}&callback=initMap" async defer></script>
 <script>
     function initMap() {
-        var location = {lat: {{ restaurant.latitude }}, lng: {{ restaurant.longitude }}};
+        var location = { lat: {{ restaurant_data.latitude }}, lng: {{ restaurant_data.longitude }} };
         var map = new google.maps.Map(document.getElementById('map'), {
             zoom: 15,
             center: location
@@ -40,7 +46,18 @@
             map: map
         });
     }
-    window.onload = initMap;
 </script>
 
+<!-- Review form for authenticated users -->
+<h3>Write a Review</h3>
+{% if user.is_authenticated %}
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Submit Review</button>
+    </form>
+{% else %}
+    <p><a href="{% url 'login' %}">Login</a> or <a href="{% url 'signup' %}">Sign up</a> to write a review.</p>
+{% endif %}
 {% endblock %}
+
