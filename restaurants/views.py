@@ -3,16 +3,12 @@ from django.http import JsonResponse, Http404
 from django.conf import settings
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Restaurant, Review
 from .google_places_service import GooglePlacesService
-from .forms import ReviewForm
 import math
-from django.shortcuts import get_object_or_404, render, redirect
-from django.contrib.auth.decorators import login_required
-from .models import Restaurant, Review
-from .google_places_service import GooglePlacesService
-from .forms import ReviewForm
-import math
+from django.shortcuts import render
+from .models import Restaurant
+from math import radians, sin, cos, sqrt, atan2
+
 
 def haversine(lat1, lon1, lat2, lon2):
     R = 6371  # Radius of the Earth in km
@@ -21,6 +17,22 @@ def haversine(lat1, lon1, lat2, lon2):
     a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return R * c
+
+def search_view(request):
+    # Example latitude and longitude for the user
+    user_lat = float(request.GET.get('lat', 33.7488))  # Default to Atlanta if not provided
+    user_lng = float(request.GET.get('lng', -84.3877))  # Default to Atlanta if not provided
+
+    # Fetch restaurants from database (example query)
+    restaurants = Restaurant.objects.all()
+
+    # Calculate distances and sort
+    for restaurant in restaurants:
+        restaurant.distance = haversine(user_lat, user_lng, restaurant.latitude, restaurant.longitude)
+
+    sorted_restaurants = sorted(restaurants, key=lambda r: r.distance)
+
+    return render(request, 'restaurants/search.html', {'restaurants': sorted_restaurants})
 
 def search_restaurants(request):
     query = request.GET.get('q')
