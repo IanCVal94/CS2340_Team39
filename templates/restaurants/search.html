@@ -171,7 +171,7 @@
         });
     
         var infowindow = new google.maps.InfoWindow({
-          content: `<a href="/restaurants/detail/${location.id}/">${location.name}</a><br>${location.address}`
+          content: '<a href="https://www.google.com/maps/search/?api=1&query=Google&query_place_id=' + location.id + '" target="_blank">'+ location.name + '</a><br>' + location.address
         });
     
         marker.addListener('click', function() {
@@ -186,7 +186,7 @@
       listElement.innerHTML = ''; // Clear existing content
       filteredRestaurants.forEach(location => {
         var listItem = document.createElement('li');
-        listItem.innerHTML = `<a href="/restaurants/detail/${location.id}/">${location.name}</a> (${location.address}) - ${location.distance.toFixed(2)} km`;
+        listItem.innerHTML = `<a href="/restaurants/detail/${location.id}">${location.name}</a> (${location.address}) - ${location.distance.toFixed(2)} km`;
         listElement.appendChild(listItem);
       });
     
