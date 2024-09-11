@@ -66,65 +66,52 @@
       });
 
       if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              var userLatLng = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
+        navigator.geolocation.getCurrentPosition((position) => {
+          var userLatLng = { lat: position.coords.latitude, lng: position.coords.longitude };
+          currentSearchLocation = userLatLng;
+
+          userMarker = new google.maps.Marker({
+            position: userLatLng,
+            map: map,
+            title: "You are here",
+            icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+          });
+
+          var userInfoWindow = new google.maps.InfoWindow({
+            content: "You are here!"
+          });
+
+          userMarker.addListener('click', function() {
+            userInfoWindow.open(map, userMarker);
+          });
+
+          // Initialize autocomplete for address input
+          var addressInput = document.getElementById('address-input');
+          var autocomplete = new google.maps.places.Autocomplete(addressInput);
+          autocomplete.addListener('place_changed', function() {
+            var place = autocomplete.getPlace();
+            if (place.geometry) {
+              var addressLatLng = {
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng()
               };
-        
-              // Create and place the marker on the map
-              var userMarker = new google.maps.Marker({
-                position: userLatLng,
-                map: map,
-                title: "You are here",
-                icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
-              });
-        
-              // Create and configure the info window
-              var userInfoWindow = new google.maps.InfoWindow({
-                content: "You are here!"
-              });
-        
-              // Add a click event listener to the marker to open the info window
-              userMarker.addListener('click', function() {
-                userInfoWindow.open(map, userMarker);
-              });
-        
-              // Initialize autocomplete for address input
-              var addressInput = document.getElementById('address-input');
-              var autocomplete = new google.maps.places.Autocomplete(addressInput);
-              autocomplete.addListener('place_changed', function() {
-                var place = autocomplete.getPlace();
-                if (place.geometry) {
-                  var addressLatLng = {
-                    lat: place.geometry.location.lat(),
-                    lng: place.geometry.location.lng()
-                  };
-                  currentSearchLocation = addressLatLng;
-                  currentSearchType = 'address';
-                  updateMapForSearch(addressLatLng);
-                  document.getElementById('update-message').style.display = 'block'; // Show update message
-                }
-              });
-        
-              // Populate map and search results with user location by default
-              updateMapForSearch(userLatLng);
-        
-            },
-            (error) => {
-              console.error('Error getting location:', error);
-              handleLocationError(true, map, defaultLatLng);
-            },
-            {
-              enableHighAccuracy: true,  // Request higher accuracy if available
-              timeout: 5000,             // Timeout for the geolocation request
-              maximumAge: 0              // Force a fresh location request
+              currentSearchLocation = addressLatLng;
+              currentSearchType = 'address';
+              updateMapForSearch(addressLatLng);
+              document.getElementById('update-message').style.display = 'block'; // Show update message
             }
-          );
-        } else {
-          handleLocationError(false, map, defaultLatLng);
-        }
+            
+          });
+
+          // Populate map and search results with user location by default
+          updateMapForSearch(userLatLng);
+
+        }, function() {
+          handleLocationError(true, map, defaultLatLng);
+        });
+      } else {
+        handleLocationError(false, map, defaultLatLng);
+      }
 
       document.getElementById('reset-button').addEventListener('click', function() {
         if (userMarker) {
