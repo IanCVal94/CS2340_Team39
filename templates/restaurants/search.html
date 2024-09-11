@@ -154,14 +154,14 @@
 
     function fetchRestaurants(centerLatLng) {
       var distanceFilter = parseFloat(document.querySelector('[name="distance"]').value) || 10;
-
+    
       var filteredRestaurants = restaurants.map(location => {
         location.distance = calculateDistance(centerLatLng.lat, centerLatLng.lng, location.lat, location.lng);
         return location;
       }).filter(location => location.distance <= distanceFilter);
-
+    
       filteredRestaurants.sort((a, b) => a.distance - b.distance);
-
+    
       // Add new restaurant markers
       filteredRestaurants.forEach(location => {
         var marker = new google.maps.Marker({
@@ -169,18 +169,18 @@
           map: map,
           title: location.name
         });
-
+    
         var infowindow = new google.maps.InfoWindow({
           content: `<a href="/restaurants/detail/${location.id}/">${location.name}</a><br>${location.address}`
         });
-
+    
         marker.addListener('click', function() {
           infowindow.open(map, marker);
         });
-
+    
         markers.push(marker); // Add to markers array
       });
-
+    
       // Populate search results
       var listElement = document.getElementById('restaurant-list');
       listElement.innerHTML = ''; // Clear existing content
@@ -189,7 +189,7 @@
         listItem.innerHTML = `<a href="/restaurants/detail/${location.id}/">${location.name}</a> (${location.address}) - ${location.distance.toFixed(2)} km`;
         listElement.appendChild(listItem);
       });
-
+    
       if (currentSearchType === 'address') {
         document.getElementById('update-message').style.display = 'block'; // Show update message
       }

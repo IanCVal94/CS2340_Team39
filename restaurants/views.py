@@ -37,7 +37,7 @@ def search_view(request):
 def search_restaurants(request):
     query = request.GET.get('q')
     cuisine = request.GET.get('cuisine')
-    user_location = request.GET.get('location')
+    user_location = request.GET.get('address')
     rating = request.GET.get('rating')
     max_distance = int(request.GET.get('distance', 10))  # Get the max distance from the form
 
@@ -58,13 +58,17 @@ def search_restaurants(request):
         user_lat, user_lng = 33.7488, -84.3877  # Default coordinates if no location is provided
 
     try:
-        restaurants = google_places.search_restaurants(query, user_location, cuisine, rating)
+        # Fetch restaurants with a larger radius initially
+        all_restaurants = google_places.search_restaurants(query, user_location, cuisine, rating, radius=20000)
         filtered_restaurants = []
 
-        for restaurant in restaurants:
+        for restaurant in all_restaurants:
             distance = haversine(user_lat, user_lng, restaurant['latitude'], restaurant['longitude'])
             if distance <= max_distance:
+                restaurant['distance'] = distance  # Add distance to the restaurant data
                 filtered_restaurants.append(restaurant)
+
+        filtered_restaurants.sort(key=lambda r: r['distance'])  # Sort by distance
 
         return render(request, 'restaurants/search.html', {'restaurants': filtered_restaurants})
     except Exception as e:
