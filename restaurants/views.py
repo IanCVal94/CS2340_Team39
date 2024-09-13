@@ -3,16 +3,12 @@ from django.http import JsonResponse, Http404
 from django.conf import settings
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Restaurant, Review
 from .google_places_service import GooglePlacesService
-from .forms import ReviewForm
 import math
-from django.shortcuts import get_object_or_404, render, redirect
-from django.contrib.auth.decorators import login_required
-from .models import Restaurant, Review
-from .google_places_service import GooglePlacesService
-from .forms import ReviewForm
-import math
+from django.shortcuts import render
+from .models import Restaurant
+from math import radians, sin, cos, sqrt, atan2
+
 
 def haversine(lat1, lon1, lat2, lon2):
     R = 6371  # Radius of the Earth in km
@@ -22,10 +18,26 @@ def haversine(lat1, lon1, lat2, lon2):
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return R * c
 
+def search_view(request):
+    # Example latitude and longitude for the user
+    user_lat = float(request.GET.get('lat', 33.7488))  # Default to Atlanta if not provided
+    user_lng = float(request.GET.get('lng', -84.3877))  # Default to Atlanta if not provided
+
+    # Fetch restaurants from database (example query)
+    restaurants = Restaurant.objects.all()
+
+    # Calculate distances and sort
+    for restaurant in restaurants:
+        restaurant.distance = haversine(user_lat, user_lng, restaurant.latitude, restaurant.longitude)
+
+    sorted_restaurants = sorted(restaurants, key=lambda r: r.distance)
+
+    return render(request, 'restaurants/search.html', {'restaurants': sorted_restaurants})
+
 def search_restaurants(request):
     query = request.GET.get('q')
     cuisine = request.GET.get('cuisine')
-    user_location = request.GET.get('location')
+    user_location = request.GET.get('address')
     rating = request.GET.get('rating')
     max_distance = int(request.GET.get('distance', 10))  # Get the max distance from the form
 
@@ -46,13 +58,17 @@ def search_restaurants(request):
         user_lat, user_lng = 33.7488, -84.3877  # Default coordinates if no location is provided
 
     try:
-        restaurants = google_places.search_restaurants(query, user_location, cuisine, rating)
+        # Fetch restaurants with a larger radius initially
+        all_restaurants = google_places.search_restaurants(query, user_location, cuisine, rating, radius=20000)
         filtered_restaurants = []
 
-        for restaurant in restaurants:
+        for restaurant in all_restaurants:
             distance = haversine(user_lat, user_lng, restaurant['latitude'], restaurant['longitude'])
             if distance <= max_distance:
+                restaurant['distance'] = distance  # Add distance to the restaurant data
                 filtered_restaurants.append(restaurant)
+
+        filtered_restaurants.sort(key=lambda r: r['distance'])  # Sort by distance
 
         return render(request, 'restaurants/search.html', {'restaurants': filtered_restaurants})
     except Exception as e:

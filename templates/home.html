@@ -1,5 +1,74 @@
 {% extends 'base.html' %}
 {% block content %}
-  <h2>Welcome to the Restaurant Search App</h2>
-  <p><a href="{% url 'login' %}">Login</a> or <a href="{% url 'signup' %}">Sign Up</a> Here!</p>
+  <header>
+    <h1>Welcome to the ATL Food Finder</h1>
+    <p>Your ultimate guide to discovering the best dining spots in Atlanta!</p>
+  </header>
+
+  <section>
+    <h2>About Us</h2>
+    <p>Welcome to the ATL Food Finder, the premier restaurant locator designed specifically for food enthusiasts in Atlanta. Whether you're a local looking for a new favorite spot or a visitor wanting to explore the city’s diverse culinary scene, we’ve got you covered.</p>
+    <p>Our platform offers a comprehensive list of restaurants, cafes, and eateries across Atlanta. Use our intuitive search features to find dining options by cuisine, location, or rating. Each listing provides detailed information, including menus, reviews, and photos, to help you make the best choice for your next meal.</p>
+  </section>
+
+  <section>
+    <h2>How It Works</h2>
+    <ol>
+      <li><strong>Search:</strong> Enter your desired location, cuisine, or restaurant name in the search bar.</li>
+      <li><strong>Explore:</strong> Browse through our curated list of dining options alongside the locations addresses.</li>
+      <li><strong>Find:</strong> Click on any restaurant to see more details, including cuisine, contact information, reviews, and more.</li>
+      <li><strong>Favorite:</strong> Save the locations you enjoyed most onto your account for future visits!</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Featured Restaurants</h2>
+    <div class="gallery">
+      {% load static %}
+      <figure>
+        <img src="{% static 'img/bones_restuarant.jpg' %}" alt="Bones Restaurant">
+        <figcaption>Bones Restaurant - Since opening in 1979, Bones has been celebrated as Atlanta's premier steakhouse, renowned for its prime beef, fresh seafood, and exceptional service.</figcaption>
+      </figure>
+      <figure>
+        <img src="{% static 'img/antico_pizza.jpg' %}" alt="Antico Pizza">
+        <figcaption>Antico Pizza - A renowned location for its authentic, artisanal Neapolitan pizzas, crafted with traditional techniques and top-quality ingredients, making it a local favorite for pizza enthusiasts.</figcaption>
+      </figure>
+      <figure>
+        <img src="{% static 'img/silver_skillet_diner.jpg' %}" alt="The Silver Skillet">
+        <figcaption>The Silver Skillet - The Silver Skillet in Atlanta is a beloved Southern diner, famous for its classic comfort foods and warm, nostalgic atmosphere, serving up dishes with a Southern charm.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Get Started</h2>
+    <p><a href="{% url 'login' %}">Login</a> or <a href="{% url 'signup' %}">Sign Up</a> to start saving your favorite restaurants today!</p>
+  </section>
+
+  <style>
+    .gallery {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+    }
+    .gallery figure {
+      margin: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      width: 300px;
+    }
+    .gallery img {
+      width: 100%;
+      height: auto;
+    }
+    .gallery figcaption {
+      padding: 10px;
+      text-align: center;
+      background-color: #f1f1f1;
+    }
+    section {
+      margin: 20px;
+    }
+  </style>
 {% endblock %}

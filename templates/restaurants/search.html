@@ -3,82 +3,234 @@
 {% block content %}
   <h2>Search Restaurants</h2>
 
-  <form method="GET" action="{% url 'search' %}">
-    <!-- Existing form fields -->
+  <form method="GET" action="{% url 'search' %}" id="search-form">
     <input type="text" name="q" placeholder="Search by name..." value="{{ request.GET.q }}">
     <input type="text" name="cuisine" placeholder="Search by cuisine..." value="{{ request.GET.cuisine }}">
-    <input type="text" id="location-search" name="location" placeholder="Search by address..." value="{{ request.GET.location }}">
     
+    <label for="address">Compare distance from address:</label>
+    <input type="text" id="address-input" name="address" placeholder="Enter address" value="{{ request.GET.address }}">
+
     <label for="distance">Distance (km):</label>
-    <input type="number" name="distance" min="1" max="100" value="{{ request.GET.distance|default:10 }}">  
-    
+    <input type="number" name="distance" min="1" max="100" value="{{ request.GET.distance|default:10 }}">
+
     <label for="rating">Minimum Rating:</label>
     <select name="rating">
         <option value="">Any</option>
-        <option value="1">1+</option>
-        <option value="2">2+</option>
-        <option value="3">3+</option>
-        <option value="4">4+</option>
-        <option value="5">5+</option>
+        <option value="1" {% if request.GET.rating == '1' %}selected{% endif %}>1+</option>
+        <option value="2" {% if request.GET.rating == '2' %}selected{% endif %}>2+</option>
+        <option value="3" {% if request.GET.rating == '3' %}selected{% endif %}>3+</option>
+        <option value="4" {% if request.GET.rating == '4' %}selected{% endif %}>4+</option>
+        <option value="5" {% if request.GET.rating == '5' %}selected{% endif %}>5+</option>
     </select>
-    
+
     <button type="submit">Search</button>
+    <button type="button" id="reset-button">Compare Distance From My Location</button>
   </form>
 
+  <h3 id="update-message" style="display:none;">Calculating new distances of restaurants searched compared to inputted address...</h3>
+  
   <h3>Search Results:</h3>
-  <ul>
-    {% for restaurant in restaurants %}
-      <li><a href="{% url 'detail' restaurant.id %}">{{ restaurant.name }}</a> ({{ restaurant.location }})</li>
-    {% empty %}
-      <li>No restaurants found matching your search criteria.</li>
-    {% endfor %}
+  <ul id="restaurant-list">
+    <!-- The list will be populated by JavaScript -->
   </ul>
 
-  <!-- Google Map Container -->
+  <h1>The ATL Food Finder Map</h1>
+  <div id="error-message" class="error-message" style="display: none;">
+    The site could not retrieve your location due to not allowing use of location data or browser does not support this feature. Search will not work unless enabled.
+  </div>
   <div id="map" style="height: 500px; width: 100%;"></div>
 
-  <script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_API_KEY }}"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDuMw9s90XBuAJlwsmqtlf2PLp-6CbL27I&libraries=places"></script>
   <script>
-    function initMap() {
-      var userLat = {{ user_lat|default:33.7488 }};
-      var userLng = {{ user_lng|default:-84.3877 }};
+    var map, userMarker, addressMarker;
+    var markers = [];
+    var restaurants = [
+      {% for restaurant in restaurants %}
+        {
+          id: "{{ restaurant.id }}",
+          lat: {{ restaurant.latitude }},
+          lng: {{ restaurant.longitude }},
+          name: "{{ restaurant.name|escapejs }}",
+          address: "{{ restaurant.location|escapejs }}"
+        }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ];
+    var currentSearchLocation = null; // To track current search location
+    var currentSearchType = 'user'; // Default to user location
 
-      var map = new google.maps.Map(document.getElementById('map'), {
+    function initMap() {
+      var defaultLatLng = { lat: 33.7488, lng: -84.3877 }; // Default to Atlanta if geolocation fails
+      map = new google.maps.Map(document.getElementById('map'), {
         zoom: 12,
-        center: {lat: userLat, lng: userLng}
+        center: defaultLatLng
       });
 
-      var locations = [
-        {% for restaurant in restaurants %}
-          {
-            lat: {{ restaurant.latitude }},
-            lng: {{ restaurant.longitude }},
-            name: "{{ restaurant.name }}",
-            id: "{{ restaurant.id }}",
-            placeId: "{{ restaurant.place_id }}",
-            address: "{{ restaurant.location }}"
-          },
-        {% endfor %}
-      ];
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          var userLatLng = { lat: position.coords.latitude, lng: position.coords.longitude };
+          currentSearchLocation = userLatLng;
 
-      locations.forEach(function(location) {
+          userMarker = new google.maps.Marker({
+            position: userLatLng,
+            map: map,
+            title: "You are here",
+            icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+          });
+
+          var userInfoWindow = new google.maps.InfoWindow({
+            content: "You are here!"
+          });
+
+          userMarker.addListener('click', function() {
+            userInfoWindow.open(map, userMarker);
+          });
+
+          // Initialize autocomplete for address input
+          var addressInput = document.getElementById('address-input');
+          var autocomplete = new google.maps.places.Autocomplete(addressInput);
+          autocomplete.addListener('place_changed', function() {
+            var place = autocomplete.getPlace();
+            if (place.geometry) {
+              var addressLatLng = {
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng()
+              };
+              currentSearchLocation = addressLatLng;
+              currentSearchType = 'address';
+              updateMapForSearch(addressLatLng);
+              document.getElementById('update-message').style.display = 'block'; // Show update message
+            }
+            
+          });
+
+          // Populate map and search results with user location by default
+          updateMapForSearch(userLatLng);
+
+        }, function() {
+          handleLocationError(true, map, defaultLatLng);
+        });
+      } else {
+        handleLocationError(false, map, defaultLatLng);
+      }
+
+      document.getElementById('reset-button').addEventListener('click', function() {
+        if (userMarker) {
+          currentSearchLocation = userMarker.getPosition().toJSON();
+          currentSearchType = 'user';
+          updateMapForSearch(currentSearchLocation);
+          document.getElementById('update-message').style.display = 'none'; // Hide update message
+        }
+      });
+    }
+
+    function updateMapForSearch(centerLatLng) {
+      map.setCenter(centerLatLng);
+
+      // Clear all markers except user marker
+      markers.forEach(marker => marker.setMap(null));
+      markers = [];
+
+      // If searching by address, add a new marker for the address
+      if (currentSearchType === 'address') {
+        addressMarker = new google.maps.Marker({
+          position: centerLatLng,
+          map: map,
+          title: "Search Location",
+          icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
+        });
+
+        var addressInfoWindow = new google.maps.InfoWindow({
+          content: "Searching for restaurants around this address..."
+        });
+
+        addressMarker.addListener('click', function() {
+          addressInfoWindow.open(map, addressMarker);
+        });
+      }
+
+      // Fetch and display restaurants around the current search location
+      fetchRestaurants(centerLatLng);
+    }
+
+    function fetchRestaurants(centerLatLng) {
+      var distanceFilter = parseFloat(document.querySelector('[name="distance"]').value) || 10;
+    
+      var filteredRestaurants = restaurants.map(location => {
+        location.distance = calculateDistance(centerLatLng.lat, centerLatLng.lng, location.lat, location.lng);
+        return location;
+      }).filter(location => location.distance <= distanceFilter);
+    
+      filteredRestaurants.sort((a, b) => a.distance - b.distance);
+    
+      // Add new restaurant markers
+      filteredRestaurants.forEach(location => {
         var marker = new google.maps.Marker({
-          position: {lat: location.lat, lng: location.lng},
+          position: { lat: location.lat, lng: location.lng },
           map: map,
           title: location.name
         });
-
+    
         var infowindow = new google.maps.InfoWindow({
           content: '<a href="https://www.google.com/maps/search/?api=1&query=Google&query_place_id=' + location.id + '" target="_blank">'+ location.name + '</a><br>' + location.address
         });
-
+    
         marker.addListener('click', function() {
           infowindow.open(map, marker);
         });
+    
+        markers.push(marker); // Add to markers array
       });
+    
+      // Populate search results
+      var listElement = document.getElementById('restaurant-list');
+      listElement.innerHTML = ''; // Clear existing content
+      filteredRestaurants.forEach(location => {
+        var listItem = document.createElement('li');
+        listItem.innerHTML = `<a href="/restaurants/detail/${location.id}">${location.name}</a> (${location.address}) - ${location.distance.toFixed(2)} km`;
+        listElement.appendChild(listItem);
+      });
+    
+      if (currentSearchType === 'address') {
+        document.getElementById('update-message').style.display = 'block'; // Show update message
+      }
+    }
+
+    function calculateDistance(lat1, lng1, lat2, lng2) {
+      var R = 6371; // Radius of the Earth in km
+      var dLat = (lat2 - lat1) * Math.PI / 180;
+      var dLng = (lng2 - lng1) * Math.PI / 180;
+      var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      var distance = R * c;
+      return distance;
+    }
+
+    function handleLocationError(browserHasGeolocation, map, defaultLatLng) {
+      map.setCenter(defaultLatLng);
+      document.getElementById('error-message').style.display = 'block';
     }
 
     window.onload = initMap;
   </script>
-{% endblock %}
 
+  <style>
+    #map {
+      height: 500px;
+      width: 100%;
+    }
+    .error-message {
+      color: red;
+      font-size: 3.2em;
+      text-align: center;
+      margin-top: 20px;
+    }
+    #update-message {
+      font-size: 1.2em;
+      color: green;
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+{% endblock %}
