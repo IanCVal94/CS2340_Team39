@@ -1,0 +1,59 @@
+h2 {
+    font-size: 2rem;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+strong {
+    font-weight: bold;
+    color: #2980b9;
+}
+
+button:hover {
+    background-color: #007bff;
+}
+
+h3 {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #2980b9;
+    padding-bottom: 5px;
+}
+
+#reviews-container {
+    padding: 10px;
+    background-color: #ecf0f1;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+#reviews-container div {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#map {
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    margin-top: 20px;
+}
