@@ -81,6 +81,8 @@ def restaurant_detail_view(request, place_id):
     api_key = settings.GOOGLE_API_KEY  # Ensure this is set in your settings
     url = f"https://maps.googleapis.com/maps/api/place/details/json?place_id={place_id}&key={api_key}"
 
+    #print(url)
+
     # Make the request to the Google Places API
     response = requests.get(url)
     data = response.json()
@@ -91,9 +93,12 @@ def restaurant_detail_view(request, place_id):
 
     # Extract relevant data from the response
     restaurant_data = data['result']
+    photo_reference = restaurant_data['photos'][0]['photo_reference']
+    restaurant_image = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo_reference}&key={api_key}"
 
     # Render your template using the restaurant data
-    return render(request, 'restaurants/detail.html', {'restaurant_data': restaurant_data, 'GOOGLE_API_KEY': api_key})
+    return render(request, 'restaurants/detail.html', {'restaurant_data': restaurant_data, 'GOOGLE_API_KEY': api_key, 'restaurant_image': restaurant_image})
+
 
 
 @login_required

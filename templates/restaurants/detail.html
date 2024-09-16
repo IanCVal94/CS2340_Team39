@@ -1,14 +1,27 @@
 {% extends 'base.html' %}
 {% block content %}
 <h2>{{ restaurant_data.name }}</h2>
-<p><strong>Cuisine Type:</strong> {{ restaurant_data.cuisine_type }}</p>
+<img src="{{ restaurant_image }}" alt="Restaurant Image">
+<p><strong>Cuisine Type:</strong> {{ restaurant_data.editorial_summary.overview }}</p>
 <p><strong>Location:</strong> {{ restaurant_data.formatted_address }}</p>
 <p><strong>Phone Number:</strong> {{ restaurant_data.formatted_phone_number }}</p>
 <p><strong>Rating:</strong> {{ restaurant_data.rating }}</p>
 <!-- Display Google Reviews -->
 <h3>Google Reviews</h3>
 <div id="reviews-container">
-    <p>Loading reviews...</p>
+    {% if restaurant_data.reviews %}
+        {% for review in restaurant_data.reviews %}
+            <div class="review">
+                <strong>{{ review.author_name }}</strong>
+                {% for _ in "0123456789"|slice:review.rating %}
+                  ⭐️ 
+                {% endfor %}
+                <p>{{ review.text }}</p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No reviews available.</p>
+    {% endif %}
 </div>
 
 {% if user.is_authenticated %}
