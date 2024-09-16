@@ -97,7 +97,8 @@ def restaurant_detail_view(request, place_id):
     restaurant_image = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo_reference}&key={api_key}"
 
     # Render your template using the restaurant data
-    return render(request, 'restaurants/detail.html', {'restaurant_data': restaurant_data, 'restaurant_image': restaurant_image})
+    return render(request, 'restaurants/detail.html', {'restaurant_data': restaurant_data, 'GOOGLE_API_KEY': api_key, 'restaurant_image': restaurant_image})
+
 
 
 @login_required
