@@ -93,7 +93,7 @@ def restaurant_detail_view(request, place_id):
     restaurant_data = data['result']
 
     # Render your template using the restaurant data
-    return render(request, 'restaurants/detail.html', {'restaurant_data': restaurant_data})
+    return render(request, 'restaurants/detail.html', {'restaurant_data': restaurant_data, 'GOOGLE_API_KEY': api_key})
 
 
 @login_required

@@ -5,7 +5,6 @@
 <p><strong>Location:</strong> {{ restaurant_data.formatted_address }}</p>
 <p><strong>Phone Number:</strong> {{ restaurant_data.formatted_phone_number }}</p>
 <p><strong>Rating:</strong> {{ restaurant_data.rating }}</p>
-
 <!-- Display Google Reviews -->
 <h3>Google Reviews</h3>
 <div id="reviews-container">
@@ -31,17 +30,24 @@
 
 <!-- Display Google Map for the restaurant location -->
 <div id="map" style="height: 400px; width: 100%;"></div>
-<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_API_KEY }}"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_API_KEY }}&callback=initMap" async defer></script>
+
 <script>
+
+
     function initMap() {
-        var location = { lat: {{ restaurant_data.latitude }}, lng: {{ restaurant_data.longitude }} };
+        var location = { lat: {{ restaurant_data.geometry.location.lat}}, lng: {{ restaurant_data.geometry.location.lng }} };
         var map = new google.maps.Map(document.getElementById('map'), {
             zoom: 15,
             center: location
         });
-        var marker = new google.maps.Marker({
+
+        // Add a marker for the restaurant location
+        var userMarker = new google.maps.Marker({
             position: location,
-            map: map
+            map: map,
+            title: "Restaurant is here",
+            icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
         });
 
         // Fetch Google Reviews
@@ -51,7 +57,7 @@
     function fetchGoogleReviews(placeId) {
         var request = {
             placeId: placeId,
-            fields: ['review']
+            fields: ['reviews']  // Correct 'review' to 'reviews'
         };
         var service = new google.maps.places.PlacesService(document.createElement('div'));
         service.getDetails(request, function(place, status) {
@@ -76,5 +82,7 @@
             }
         });
     }
+</script>
+
 </script>
 {% endblock %}
