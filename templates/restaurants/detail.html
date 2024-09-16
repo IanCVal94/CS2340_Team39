@@ -6,6 +6,10 @@
 <p><strong>Location:</strong> {{ restaurant_data.formatted_address }}</p>
 <p><strong>Phone Number:</strong> {{ restaurant_data.formatted_phone_number }}</p>
 <p><strong>Rating:</strong> {{ restaurant_data.rating }}</p>
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/detail.css' %}">
+
 <!-- Display Google Reviews -->
 <h3>Google Reviews</h3>
 <div id="reviews-container">
