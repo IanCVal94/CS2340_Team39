@@ -9,7 +9,19 @@
 <!-- Display Google Reviews -->
 <h3>Google Reviews</h3>
 <div id="reviews-container">
-    <p>Loading reviews...</p>
+    {% if restaurant_data.reviews %}
+        {% for review in restaurant_data.reviews %}
+            <div class="review">
+                <strong>{{ review.author_name }}</strong>
+                {% for _ in "0123456789"|slice:review.rating %}
+                  ⭐️ 
+                {% endfor %}
+                <p>{{ review.text }}</p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No reviews available.</p>
+    {% endif %}
 </div>
 
 {% if user.is_authenticated %}
