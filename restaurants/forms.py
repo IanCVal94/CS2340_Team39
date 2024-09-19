@@ -12,6 +12,10 @@ class ReviewForm(forms.ModelForm):
     class Meta:
         model = Review
         fields = ['rating', 'review_text']
+        widgets = {
+            'rating': forms.Select(choices=[(i, f'{i} ⭐️') for i in range(1, 6)]),
+            'review_text': forms.Textarea(attrs={'rows': 4})
+        }
 
 class accountsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'

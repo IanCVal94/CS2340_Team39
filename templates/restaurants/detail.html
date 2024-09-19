@@ -10,17 +10,35 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/detail.css' %}">
 
+<h3>Leave a Review</h3>
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit</button>
+</form>
+
 <!-- Display Google Reviews -->
-<h3>Google Reviews</h3>
+<h3>Customer Reviews</h3>
 <div id="reviews-container">
+    {% for review in reviews %}
+        <div class="review">
+            <strong>{{ review.user.username }}</strong>
+            {% for _ in "0123456789"|slice:review.rating %}
+              ⭐️
+            {% endfor %}
+            <p>{{ review.review_text }}</p>
+            <h4 id="review-source">Food Finder User</h4>
+        </div>
+    {% endfor %}
     {% if restaurant_data.reviews %}
         {% for review in restaurant_data.reviews %}
             <div class="review">
                 <strong>{{ review.author_name }}</strong>
                 {% for _ in "0123456789"|slice:review.rating %}
-                  ⭐️ 
+                  ⭐️
                 {% endfor %}
                 <p>{{ review.text }}</p>
+                <h4 id="review-source">Google Review</h4>
             </div>
         {% endfor %}
     {% else %}

@@ -3,10 +3,12 @@ from django.http import JsonResponse, Http404
 from django.conf import settings
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
+
+from .forms import ReviewForm
 from .google_places_service import GooglePlacesService
 import math
 from django.shortcuts import render
-from .models import Restaurant
+from .models import Restaurant, Review
 from math import radians, sin, cos, sqrt, atan2
 
 
@@ -81,8 +83,6 @@ def restaurant_detail_view(request, place_id):
     api_key = settings.GOOGLE_API_KEY  # Ensure this is set in your settings
     url = f"https://maps.googleapis.com/maps/api/place/details/json?place_id={place_id}&key={api_key}"
 
-    #print(url)
-
     # Make the request to the Google Places API
     response = requests.get(url)
     data = response.json()
@@ -96,8 +96,25 @@ def restaurant_detail_view(request, place_id):
     photo_reference = restaurant_data['photos'][0]['photo_reference']
     restaurant_image = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo_reference}&key={api_key}"
 
+    reviews = Review.objects.filter(restaurant_id=place_id)
+    if request.method == 'POST':
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.user = request.user
+            review.restaurant_id = place_id
+            review.save()
+    else:
+        form = ReviewForm()
+
     # Render your template using the restaurant data
-    return render(request, 'restaurants/detail.html', {'restaurant_data': restaurant_data, 'GOOGLE_API_KEY': api_key, 'restaurant_image': restaurant_image})
+    return render(request, 'restaurants/detail.html', {
+        'reviews': reviews,
+        'form': form,
+        'restaurant_data': restaurant_data,
+        'GOOGLE_API_KEY': api_key,
+        'restaurant_image': restaurant_image,
+    })
 
 
 
