@@ -11,11 +11,17 @@
 <link rel="stylesheet" href="{% static 'css/detail.css' %}">
 
 <h3>Leave a Review</h3>
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Submit</button>
-</form>
+{% if user.is_authenticated %}
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Submit</button>
+    </form>
+{% else %}
+    <p><a href="{% url 'login' %}">Login</a> To Leave A Review</p>
+    <p>Or <a href="{% url 'signup' %}">Sign Up</a> To Leave A Review</p>
+{% endif %}
+    
 
 <!-- Display Google Reviews -->
 <h3>Customer Reviews</h3>
