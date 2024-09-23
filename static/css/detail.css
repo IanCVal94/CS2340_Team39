@@ -28,19 +28,20 @@ button:hover {
     background-color: #007bff;
 }
 
+#reviews-container {
+    padding: 10px;
+    background-color: #ecf0f1;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
 h3 {
     font-size: 1.5rem;
     color: #2c3e50;
     margin-bottom: 10px;
     border-bottom: 2px solid #2980b9;
     padding-bottom: 5px;
-}
 
-#reviews-container {
-    padding: 10px;
-    background-color: #ecf0f1;
-    border-radius: 5px;
-    margin-bottom: 20px;
 }
 
 #reviews-container div {
@@ -50,6 +51,7 @@ h3 {
     border: 1px solid #ddd;
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
 }
 
 #map {

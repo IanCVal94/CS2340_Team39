@@ -7,7 +7,7 @@
     <input type="text" name="q" placeholder="Search by name..." value="{{ request.GET.q }}">
     <input type="text" name="cuisine" placeholder="Search by cuisine..." value="{{ request.GET.cuisine }}">
     
-    <label for="address">Compare distance from address:</label>
+    <label for="address">Compare distance from address: (Make section blank if user wants to use their location)</label>
     <input type="text" id="address-input" name="address" placeholder="Enter address" value="{{ request.GET.address }}">
 
     <label for="distance">Distance (km):</label>
@@ -24,7 +24,6 @@
     </select>
 
     <button type="submit">Search</button>
-    <button type="button" id="reset-button">Compare Distance From My Location</button>
   </form>
 
   <h3 id="update-message" style="display:none;">Calculating new distances of restaurants searched compared to inputted address...</h3>
