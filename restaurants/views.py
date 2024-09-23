@@ -121,10 +121,13 @@ def restaurant_detail_view(request, place_id):
 @login_required
 def favorite_restaurant(request):
     place_id = request.GET.get('place_id')  # Get place_id from query parameters
+
+    # get name to pass in somehow
+
     if not place_id:
         return redirect('search')  # Redirect if no place_id provided
 
-    restaurant = get_object_or_404(Restaurant, place_id=place_id)
+    restaurant, created = Restaurant.objects.get_or_create(place_id=place_id)
     profile = request.user.profile
     if restaurant in profile.favorites.all():
         profile.favorites.remove(restaurant)
