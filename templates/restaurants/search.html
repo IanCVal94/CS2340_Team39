@@ -6,9 +6,6 @@
   <form method="GET" action="{% url 'search' %}" id="search-form">
     <input type="text" name="q" placeholder="Search by name..." value="{{ request.GET.q }}">
     <input type="text" name="cuisine" placeholder="Search by cuisine..." value="{{ request.GET.cuisine }}">
-    
-    <label for="address">Compare distance from address: (Make section blank if user wants to use their location)</label>
-    <input type="text" id="address-input" name="address" placeholder="Enter address" value="{{ request.GET.address }}">
 
     <label for="distance">Distance (km):</label>
     <input type="number" name="distance" min="1" max="100" value="{{ request.GET.distance|default:10 }}">
@@ -82,24 +79,6 @@
 
           userMarker.addListener('click', function() {
             userInfoWindow.open(map, userMarker);
-          });
-
-          // Initialize autocomplete for address input
-          var addressInput = document.getElementById('address-input');
-          var autocomplete = new google.maps.places.Autocomplete(addressInput);
-          autocomplete.addListener('place_changed', function() {
-            var place = autocomplete.getPlace();
-            if (place.geometry) {
-              var addressLatLng = {
-                lat: place.geometry.location.lat(),
-                lng: place.geometry.location.lng()
-              };
-              currentSearchLocation = addressLatLng;
-              currentSearchType = 'address';
-              updateMapForSearch(addressLatLng);
-              document.getElementById('update-message').style.display = 'block'; // Show update message
-            }
-            
           });
 
           // Populate map and search results with user location by default
