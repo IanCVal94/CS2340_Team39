@@ -3,10 +3,10 @@ from django.http import JsonResponse, Http404
 from django.conf import settings
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
-
 from .forms import ReviewForm
 from .google_places_service import GooglePlacesService
 import math
+from accounts.models import Profile
 from django.shortcuts import render
 from .models import Restaurant, Review
 from math import radians, sin, cos, sqrt, atan2
@@ -121,14 +121,16 @@ def restaurant_detail_view(request, place_id):
 @login_required
 def favorite_restaurant(request):
     place_id = request.GET.get('place_id')  # Get place_id from query parameters
-
+    name = request.GET.get('name')
+    print(request.GET)
     # get name to pass in somehow
 
     if not place_id:
         return redirect('search')  # Redirect if no place_id provided
 
-    restaurant, created = Restaurant.objects.get_or_create(place_id=place_id)
-    profile = request.user.profile
+    restaurant, created = Restaurant.objects.get_or_create(place_id=place_id, name=name)
+    print(restaurant)
+    profile = Profile.objects.get_or_create(user=request.user)[0]
     if restaurant in profile.favorites.all():
         profile.favorites.remove(restaurant)
     else:

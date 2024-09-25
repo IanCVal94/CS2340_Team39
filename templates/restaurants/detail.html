@@ -6,6 +6,8 @@
         <form action="{% url 'favorite' %}" method="get">
             {% csrf_token %}
             <input type="hidden" name="place_id" value="{{ restaurant_data.place_id }}">
+            <input type="hidden" name="name" value="{{ restaurant_data.name }}">
+
             <button type="submit" id="favorite"> 
                 {% if restaurant_data.place_id in user.profile.favorites.all %}
                     Remove from Favorites
