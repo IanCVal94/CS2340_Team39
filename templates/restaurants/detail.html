@@ -96,16 +96,6 @@
 
         // Fetch Google Reviews
         fetchGoogleReviews('{{ restaurant_data.place_id }}');
-        
-        document.getElementById("favorite").addEventListener(, "click", function () {
-            if ({{ user.is_authenticated }} {
-                if ({{ restaurant_data.place_id }} in {{ user.profile.favorites.all }}) {
-                    
-                } else {
-                    
-                }
-            }
-        });
     }
 
     function fetchGoogleReviews(placeId) {
