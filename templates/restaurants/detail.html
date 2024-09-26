@@ -7,9 +7,10 @@
             {% csrf_token %}
             <input type="hidden" name="place_id" value="{{ restaurant_data.place_id }}">
             <input type="hidden" name="name" value="{{ restaurant_data.name }}">
+            <input type="hidden" name="toggle_favorite" value="true">
 
             <button type="submit" id="favorite"> 
-                {% if restaurant_data.place_id in user.profile.favorites.all %}
+                {% if is_favorite %}
                     Remove from Favorites
                 {% else %}
                     Add to Favorites

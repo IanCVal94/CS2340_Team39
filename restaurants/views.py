@@ -123,17 +123,25 @@ def favorite_restaurant(request):
     place_id = request.GET.get('place_id')  # Get place_id from query parameters
     name = request.GET.get('name')
     print(request.GET)
-    # get name to pass in somehow
 
     if not place_id:
         return redirect('search')  # Redirect if no place_id provided
 
-    restaurant, created = Restaurant.objects.get_or_create(place_id=place_id, name=name)
-    print(restaurant)
+    restaurant, created = Restaurant.objects.get_or_create(place_id=place_id, defaults={'name': name})
     profile = Profile.objects.get_or_create(user=request.user)[0]
-    if restaurant in profile.favorites.all():
-        profile.favorites.remove(restaurant)
-    else:
-        profile.favorites.add(restaurant)
 
-    return redirect('detail', place_id=place_id)
+    is_favorite = profile.favorites.contains(restaurant)
+    print(is_favorite)
+
+    if request.method == 'GET' and 'toggle_favorite' in request.GET:
+        if is_favorite:
+            profile.favorites.remove(restaurant)
+        else:
+            profile.favorites.add(restaurant)
+        return redirect('detail', place_id=place_id)
+
+    return render(request, 'detail.html', {
+        'restaurant_data': restaurant,
+        'is_favorite': is_favorite,
+    })
+
