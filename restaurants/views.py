@@ -97,8 +97,15 @@ def restaurant_detail_view(request, place_id):
     restaurant_image = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo_reference}&key={api_key}"
 
     restaurant, created = Restaurant.objects.get_or_create(place_id=place_id, defaults={'name': restaurant_data['name']})
-    profile = Profile.objects.get_or_create(user=request.user)[0]
-    is_favorite = profile.favorites.contains(restaurant)
+
+    is_favorite = False  # Default value
+
+    if request.user.is_authenticated:
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        if profile and profile.favorites:
+            is_favorite = profile.favorites.contains(restaurant)
+    else:
+        profile = None
 
     reviews = Review.objects.filter(restaurant_id=place_id)
 
@@ -121,8 +128,6 @@ def restaurant_detail_view(request, place_id):
         'restaurant_image': restaurant_image,
         'is_favorite': is_favorite,
     })
-
-
 
 @login_required
 def favorite_restaurant(request):
