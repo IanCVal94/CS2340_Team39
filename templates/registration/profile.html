@@ -3,7 +3,7 @@
 <h2>{{ user.username }}'s Profile</h2>
 <h3>Your Favorite Restaurants</h3>
 <ul>
-    {% for restaurant in user.favorites %}
+    {% for restaurant in user.profile.favorites.all %}
         <li>
             <a href="{% url 'detail' restaurant.place_id %}">
                 {{ restaurant.name }}
