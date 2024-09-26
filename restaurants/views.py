@@ -96,7 +96,12 @@ def restaurant_detail_view(request, place_id):
     photo_reference = restaurant_data['photos'][0]['photo_reference']
     restaurant_image = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo_reference}&key={api_key}"
 
+    restaurant, created = Restaurant.objects.get_or_create(place_id=place_id, defaults={'name': restaurant_data['name']})
+    profile = Profile.objects.get_or_create(user=request.user)[0]
+    is_favorite = profile.favorites.contains(restaurant)
+
     reviews = Review.objects.filter(restaurant_id=place_id)
+
     if request.method == 'POST':
         form = ReviewForm(request.POST)
         if form.is_valid():
@@ -114,34 +119,31 @@ def restaurant_detail_view(request, place_id):
         'restaurant_data': restaurant_data,
         'GOOGLE_API_KEY': api_key,
         'restaurant_image': restaurant_image,
+        'is_favorite': is_favorite,
     })
 
 
 
 @login_required
 def favorite_restaurant(request):
-    place_id = request.GET.get('place_id')  # Get place_id from query parameters
-    name = request.GET.get('name')
-    print(request.GET)
+    if request.method == 'POST':
+        place_id = request.POST.get('place_id')  # Get place_id from query parameters
+        name = request.POST.get('name')
+        print(request.GET)
 
-    if not place_id:
-        return redirect('search')  # Redirect if no place_id provided
+        if not place_id:
+            return redirect('search')  # Redirect if no place_id provided
 
-    restaurant, created = Restaurant.objects.get_or_create(place_id=place_id, defaults={'name': name})
-    profile = Profile.objects.get_or_create(user=request.user)[0]
+        restaurant, created = Restaurant.objects.get_or_create(place_id=place_id, defaults={'name': name})
+        profile = Profile.objects.get_or_create(user=request.user)[0]
 
-    is_favorite = profile.favorites.contains(restaurant)
-    print(is_favorite)
+        is_favorite = profile.favorites.contains(restaurant)
 
-    if request.method == 'GET' and 'toggle_favorite' in request.GET:
         if is_favorite:
             profile.favorites.remove(restaurant)
         else:
             profile.favorites.add(restaurant)
         return redirect('detail', place_id=place_id)
 
-    return render(request, 'detail.html', {
-        'restaurant_data': restaurant,
-        'is_favorite': is_favorite,
-    })
+    return redirect('detail', place_id=request.GET.get('place_id'))
 

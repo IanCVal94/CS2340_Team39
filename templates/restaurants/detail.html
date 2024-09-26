@@ -3,11 +3,10 @@
     <h2>{{ restaurant_data.name }}</h2>
     
     {% if user.is_authenticated %}
-        <form action="{% url 'favorite' %}" method="get">
+        <form action="{% url 'favorite' %}" method="post">
             {% csrf_token %}
             <input type="hidden" name="place_id" value="{{ restaurant_data.place_id }}">
             <input type="hidden" name="name" value="{{ restaurant_data.name }}">
-            <input type="hidden" name="toggle_favorite" value="true">
 
             <button type="submit" id="favorite"> 
                 {% if is_favorite %}
