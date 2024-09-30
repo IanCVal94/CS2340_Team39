@@ -3,10 +3,12 @@ from django.http import JsonResponse, Http404
 from django.conf import settings
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
+from .forms import ReviewForm
 from .google_places_service import GooglePlacesService
 import math
+from accounts.models import Profile
 from django.shortcuts import render
-from .models import Restaurant
+from .models import Restaurant, Review
 from math import radians, sin, cos, sqrt, atan2
 
 
@@ -81,8 +83,6 @@ def restaurant_detail_view(request, place_id):
     api_key = settings.GOOGLE_API_KEY  # Ensure this is set in your settings
     url = f"https://maps.googleapis.com/maps/api/place/details/json?place_id={place_id}&key={api_key}"
 
-    #print(url)
-
     # Make the request to the Google Places API
     response = requests.get(url)
     data = response.json()
@@ -96,21 +96,59 @@ def restaurant_detail_view(request, place_id):
     photo_reference = restaurant_data['photos'][0]['photo_reference']
     restaurant_image = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo_reference}&key={api_key}"
 
-    # Render your template using the restaurant data
-    return render(request, 'restaurants/detail.html', {'restaurant_data': restaurant_data, 'restaurant_image': restaurant_image})
+    restaurant, created = Restaurant.objects.get_or_create(place_id=place_id, defaults={'name': restaurant_data['name']})
 
+    is_favorite = False  # Default value
+
+    if request.user.is_authenticated:
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        if profile and profile.favorites:
+            is_favorite = profile.favorites.contains(restaurant)
+    else:
+        profile = None
+
+    reviews = Review.objects.filter(restaurant_id=place_id)
+
+    if request.method == 'POST':
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.user = request.user
+            review.restaurant_id = place_id
+            review.save()
+    else:
+        form = ReviewForm()
+
+    # Render your template using the restaurant data
+    return render(request, 'restaurants/detail.html', {
+        'reviews': reviews,
+        'form': form,
+        'restaurant_data': restaurant_data,
+        'GOOGLE_API_KEY': api_key,
+        'restaurant_image': restaurant_image,
+        'is_favorite': is_favorite,
+    })
 
 @login_required
 def favorite_restaurant(request):
-    place_id = request.GET.get('place_id')  # Get place_id from query parameters
-    if not place_id:
-        return redirect('search')  # Redirect if no place_id provided
+    if request.method == 'POST':
+        place_id = request.POST.get('place_id')  # Get place_id from query parameters
+        name = request.POST.get('name')
+        print(request.GET)
 
-    restaurant = get_object_or_404(Restaurant, place_id=place_id)
-    profile = request.user.profile
-    if restaurant in profile.favorites.all():
-        profile.favorites.remove(restaurant)
-    else:
-        profile.favorites.add(restaurant)
+        if not place_id:
+            return redirect('search')  # Redirect if no place_id provided
 
-    return redirect('detail', place_id=place_id)
+        restaurant, created = Restaurant.objects.get_or_create(place_id=place_id, defaults={'name': name})
+        profile = Profile.objects.get_or_create(user=request.user)[0]
+
+        is_favorite = profile.favorites.contains(restaurant)
+
+        if is_favorite:
+            profile.favorites.remove(restaurant)
+        else:
+            profile.favorites.add(restaurant)
+        return redirect('detail', place_id=place_id)
+
+    return redirect('detail', place_id=request.GET.get('place_id'))
+

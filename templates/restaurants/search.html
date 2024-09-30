@@ -6,9 +6,6 @@
   <form method="GET" action="{% url 'search' %}" id="search-form">
     <input type="text" name="q" placeholder="Search by name..." value="{{ request.GET.q }}">
     <input type="text" name="cuisine" placeholder="Search by cuisine..." value="{{ request.GET.cuisine }}">
-    
-    <label for="address">Compare distance from address:</label>
-    <input type="text" id="address-input" name="address" placeholder="Enter address" value="{{ request.GET.address }}">
 
     <label for="distance">Distance (km):</label>
     <input type="number" name="distance" min="1" max="100" value="{{ request.GET.distance|default:10 }}">
@@ -24,7 +21,6 @@
     </select>
 
     <button type="submit">Search</button>
-    <button type="button" id="reset-button">Compare Distance From My Location</button>
   </form>
 
   <h3 id="update-message" style="display:none;">Calculating new distances of restaurants searched compared to inputted address...</h3>
@@ -42,8 +38,8 @@
 
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDuMw9s90XBuAJlwsmqtlf2PLp-6CbL27I&libraries=places"></script>
   <script>
-    var map, userMarker, addressMarker;
-    var markers = [];
+        var map, userMarker, addressMarker;
+        var markers = [];
     var restaurants = [
       {% for restaurant in restaurants %}
         {
@@ -83,24 +79,6 @@
 
           userMarker.addListener('click', function() {
             userInfoWindow.open(map, userMarker);
-          });
-
-          // Initialize autocomplete for address input
-          var addressInput = document.getElementById('address-input');
-          var autocomplete = new google.maps.places.Autocomplete(addressInput);
-          autocomplete.addListener('place_changed', function() {
-            var place = autocomplete.getPlace();
-            if (place.geometry) {
-              var addressLatLng = {
-                lat: place.geometry.location.lat(),
-                lng: place.geometry.location.lng()
-              };
-              currentSearchLocation = addressLatLng;
-              currentSearchType = 'address';
-              updateMapForSearch(addressLatLng);
-              document.getElementById('update-message').style.display = 'block'; // Show update message
-            }
-            
           });
 
           // Populate map and search results with user location by default

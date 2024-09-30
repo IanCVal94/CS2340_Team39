@@ -1,23 +1,70 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>{{ restaurant_data.name }}</h2>
+    <h2>{{ restaurant_data.name }}</h2>
+    
+    {% if user.is_authenticated %}
+        <form action="{% url 'favorite' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="place_id" value="{{ restaurant_data.place_id }}">
+            <input type="hidden" name="name" value="{{ restaurant_data.name }}">
+
+            <button type="submit" id="favorite"> 
+                {% if is_favorite %}
+                    Remove from Favorites
+                {% else %}
+                    Add to Favorites
+                {% endif %}
+            </button>
+        </form>
+    {% else %}
+    <p><a href="{% url 'login' %}">Login</a> To Favorite Restaurants</p>
+    <p>Or <a href="{% url 'signup' %}">Sign Up</a> To Favorite Restaurants</p>
+    {% endif %}
+    
 <img src="{{ restaurant_image }}" alt="Restaurant Image">
 <p><strong>Cuisine Type:</strong> {{ restaurant_data.editorial_summary.overview }}</p>
 <p><strong>Location:</strong> {{ restaurant_data.formatted_address }}</p>
 <p><strong>Phone Number:</strong> {{ restaurant_data.formatted_phone_number }}</p>
 <p><strong>Rating:</strong> {{ restaurant_data.rating }}</p>
 
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/detail.css' %}">
+
+<h3>Leave a Review</h3>
+{% if user.is_authenticated %}
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Submit</button>
+    </form>
+{% else %}
+    <p><a href="{% url 'login' %}">Login</a> To Leave A Review</p>
+    <p>Or <a href="{% url 'signup' %}">Sign Up</a> To Leave A Review</p>
+{% endif %}
+    
+
 <!-- Display Google Reviews -->
-<h3>Google Reviews</h3>
+<h3>Customer Reviews</h3>
 <div id="reviews-container">
+    {% for review in reviews %}
+        <div class="review">
+            <strong>{{ review.user.username }}</strong>
+            {% for _ in "0123456789"|slice:review.rating %}
+              ⭐️
+            {% endfor %}
+            <p>{{ review.review_text }}</p>
+            <h4 id="review-source">Food Finder User</h4>
+        </div>
+    {% endfor %}
     {% if restaurant_data.reviews %}
         {% for review in restaurant_data.reviews %}
             <div class="review">
                 <strong>{{ review.author_name }}</strong>
                 {% for _ in "0123456789"|slice:review.rating %}
-                  ⭐️ 
+                  ⭐️
                 {% endfor %}
                 <p>{{ review.text }}</p>
+                <h4 id="review-source">Google Review</h4>
             </div>
         {% endfor %}
     {% else %}
@@ -25,36 +72,26 @@
     {% endif %}
 </div>
 
-{% if user.is_authenticated %}
-    <form action="{% url 'favorite' %}" method="get">
-        {% csrf_token %}
-        <input type="hidden" name="place_id" value="{{ restaurant_data.place_id }}">
-        <button type="submit">
-            {% if restaurant_data.place_id in user.profile.favorites.all %}
-                Remove from Favorites
-            {% else %}
-                Add to Favorites
-            {% endif %}
-        </button>
-    </form>
-{% else %}
-    <p><a href="{% url 'login' %}">Login</a> To Favorite Restaurants</p>
-    <p>Or <a href="{% url 'signup' %}">Sign Up</a> To Favorite Restaurants</p>
-{% endif %}
-
 <!-- Display Google Map for the restaurant location -->
 <div id="map" style="height: 400px; width: 100%;"></div>
-<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_API_KEY }}"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_API_KEY }}&callback=initMap" async defer></script>
+
 <script>
+
+
     function initMap() {
-        var location = { lat: {{ restaurant_data.latitude }}, lng: {{ restaurant_data.longitude }} };
+        var location = { lat: {{ restaurant_data.geometry.location.lat}}, lng: {{ restaurant_data.geometry.location.lng }} };
         var map = new google.maps.Map(document.getElementById('map'), {
             zoom: 15,
             center: location
         });
-        var marker = new google.maps.Marker({
+
+        // Add a marker for the restaurant location
+        var userMarker = new google.maps.Marker({
             position: location,
-            map: map
+            map: map,
+            title: "Restaurant is here",
+            icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
         });
 
         // Fetch Google Reviews
@@ -64,7 +101,7 @@
     function fetchGoogleReviews(placeId) {
         var request = {
             placeId: placeId,
-            fields: ['review']
+            fields: ['reviews']  // Correct 'review' to 'reviews'
         };
         var service = new google.maps.places.PlacesService(document.createElement('div'));
         service.getDetails(request, function(place, status) {
@@ -89,5 +126,7 @@
             }
         });
     }
+</script>
+
 </script>
 {% endblock %}
